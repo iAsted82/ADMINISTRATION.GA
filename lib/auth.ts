@@ -90,7 +90,7 @@ export const authOptions: NextAuthOptions = {
     },
     
     async session({ session, token }) {
-      if (session.user) {
+      if (token && session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.firstName = token.firstName as string;
@@ -100,7 +100,12 @@ export const authOptions: NextAuthOptions = {
         session.user.organization = token.organization as any;
         session.user.isVerified = token.isVerified as boolean;
       }
-      return session;
+      
+      // Ensure we always return a valid session object
+      return {
+        ...session,
+        expires: session.expires,
+      };
     }
   },
   
