@@ -3,6 +3,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 
+// Sentry temporairement désactivé pour réduire le bruit dans les logs
+// import * as Sentry from "@sentry/nextjs";
+// Sentry.init({...});
+
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap',
