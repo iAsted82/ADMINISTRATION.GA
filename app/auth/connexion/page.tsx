@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Flag, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
+import { DEMO_ACCOUNTS } from '@/lib/constants';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,58 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const loginWithDemoAccount = async (account: typeof DEMO_ACCOUNTS[0]) => {
+    setIsLoading(true);
+    setError('');
+    
+    // Fill form fields
+    setValue('email', account.email);
+    setValue('password', account.password);
+
+    const toastId = toast.loading(`Connexion avec ${account.firstName} ${account.lastName}...`);
+
+    try {
+      const result = await signIn('credentials', {
+        email: account.email,
+        password: account.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error('Erreur de connexion', { id: toastId });
+        setError('Erreur de connexion');
+        return;
+      }
+
+      toast.success(`Connecté en tant que ${account.firstName} ${account.lastName}`, { id: toastId });
+
+      // Get the session to determine redirect based on role
+      const session = await getSession();
+      if (session?.user) {
+        switch (session.user.role) {
+          case 'SUPER_ADMIN':
+            router.push('/admin/dashboard');
+            break;
+          case 'ADMIN':
+            router.push('/admin/dashboard');
+            break;
+          case 'MANAGER':
+            router.push('/manager/dashboard');
+            break;
+          case 'AGENT':
+            router.push('/agent/dashboard');
+            break;
+          default:
+            router.push('/citoyen/dashboard');
+        }
+      }
+    } catch (error) {
+      toast.error('Une erreur est survenue', { id: toastId });
+      setError('Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
     setError('');
@@ -205,21 +258,59 @@ export default function LoginPage() {
         </Card>
 
         {/* Demo Accounts */}
-        <Card className="mt-6">
+        <Card className="mt-6 border-primary/20">
           <CardHeader>
-            <CardTitle className="text-lg">Comptes de démonstration</CardTitle>
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span>Accès Rapide - Comptes de Démonstration</span>
+            </CardTitle>
             <CardDescription>
-              Utilisez ces comptes pour tester la plateforme
+              Connectez-vous directement avec un compte de test en un clic
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-sm">
-              <p className="font-medium">Super Admin:</p>
-              <p className="text-muted-foreground">superadmin@admin.ga / SuperAdmin2024!</p>
-            </div>
-            <div className="text-sm">
-              <p className="font-medium">Citoyen:</p>
-              <p className="text-muted-foreground">jean.dupont@gmail.com / User2024!</p>
+          <CardContent className="space-y-3">
+            {DEMO_ACCOUNTS.map((account) => (
+              <div key={account.email} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white ${
+                    account.role === 'SUPER_ADMIN' ? 'bg-red-500' :
+                    account.role === 'ADMIN' ? 'bg-orange-500' :
+                    account.role === 'MANAGER' ? 'bg-yellow-500' :
+                    account.role === 'AGENT' ? 'bg-green-500' :
+                    'bg-blue-500'
+                  }`}>
+                    {account.firstName.charAt(0)}{account.lastName.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {account.firstName} {account.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {account.role === 'SUPER_ADMIN' && 'Super Administrateur'}
+                      {account.role === 'ADMIN' && 'Administrateur'}
+                      {account.role === 'MANAGER' && 'Responsable'}
+                      {account.role === 'AGENT' && 'Agent'}
+                      {account.role === 'USER' && 'Citoyen'}
+                      {account.organization && ` • ${account.organization}`}
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => loginWithDemoAccount(account)}
+                  disabled={isLoading}
+                  className="text-xs"
+                >
+                  {isLoading ? 'Connexion...' : 'Se connecter'}
+                </Button>
+              </div>
+            ))}
+            
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                💡 <strong>Astuce:</strong> Ces comptes sont pré-configurés pour tester toutes les fonctionnalités de la plateforme selon votre rôle.
+              </p>
             </div>
           </CardContent>
         </Card>
