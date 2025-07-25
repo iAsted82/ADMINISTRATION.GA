@@ -5,8 +5,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import type { User, UserRole } from '@prisma/client';
 
-export function getAuthOptions(): NextAuthOptions {
-  return {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     CredentialsProvider({
@@ -124,4 +123,3 @@ export function getAuthOptions(): NextAuthOptions {
     }
   }
   };
-}
