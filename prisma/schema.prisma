@@ -248,9 +248,6 @@ model User {
   sentNotifications Notification[] @relation("NotificationSender")
   receivedNotifications Notification[] @relation("NotificationReceiver")
 
-  // Notification preferences
-  notificationPreferences UserNotificationPreference[]
-
   @@map("users")
 }
 
